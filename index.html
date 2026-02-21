@@ -613,7 +613,7 @@
       const { error } = await db.auth.signUp({
         email,
         password: pass,
-        options: { emailRedirectTo: 'file:///C:/Users/Gizem/Desktop/CLAUDE/todo/index.html' }  // Frankfurt (eu-central-1)
+        options: { emailRedirectTo: 'https://todo-app-3on.pages.dev' }
       });
       if (error) {
         errEl.textContent = error.message;
