@@ -1044,7 +1044,11 @@
         options: { emailRedirectTo: 'https://todo-app-3on.pages.dev' }
       });
       if (error) {
-        errEl.textContent = error.message;
+        const signupMsgs = {
+          'User already registered': 'Bu e-posta zaten kayıtlı.',
+          'Password should be at least 6 characters': 'Şifre en az 6 karakter olmalı.',
+        };
+        errEl.textContent = signupMsgs[error.message] || 'Kayıt sırasında bir hata oluştu.';
       } else {
         document.getElementById('confirm-email-text').textContent = email;
         showScreen('confirm');
@@ -1196,11 +1200,14 @@
     render();
   }
 
+  const VALID_PRIORITIES = ['genel', 'onemli', 'acil'];
+
   async function addTask() {
     const text = taskInput.value.trim();
-    if (!text || !currentUser) return;
-    const priority = prioritySel.value;
-    const deadline = deadlineInp.value || null;
+    if (!text || text.length > 120 || !currentUser) return;
+    const priority = VALID_PRIORITIES.includes(prioritySel.value) ? prioritySel.value : 'genel';
+    const deadlineRaw = deadlineInp.value;
+    const deadline = /^\d{4}-\d{2}-\d{2}$/.test(deadlineRaw) ? deadlineRaw : null;
     taskInput.value   = '';
     deadlineInp.value = '';
     prioritySel.value = 'genel';
@@ -1212,7 +1219,7 @@
       .select()
       .single();
 
-    if (error) { showToast('Görev eklenemedi: ' + error.message, 'error'); return; }
+    if (error) { showToast('Görev eklenemedi.', 'error'); return; }
     tasks.unshift(data);
     render();
   }
@@ -1298,9 +1305,11 @@
 
   async function commitEdit(id, li) {
     const text     = li.querySelector('.edit-input').value.trim();
-    const priority = li.querySelector('.edit-priority').value;
-    const deadline = li.querySelector('.edit-date').value || null;
-    if (!text) return;
+    const priority = VALID_PRIORITIES.includes(li.querySelector('.edit-priority').value)
+      ? li.querySelector('.edit-priority').value : 'genel';
+    const deadlineRaw = li.querySelector('.edit-date').value;
+    const deadline = /^\d{4}-\d{2}-\d{2}$/.test(deadlineRaw) ? deadlineRaw : null;
+    if (!text || text.length > 120) return;
     const { error } = await db.from('todos').update({ text, priority, deadline }).eq('id', id);
     if (error) { showToast('Düzenlenemedi.', 'error'); return; }
     const t = tasks.find(t => t.id === id);
